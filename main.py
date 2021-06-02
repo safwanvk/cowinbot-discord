@@ -1,45 +1,47 @@
-# IMPORT DISCORD.PY. ALLOWS ACCESS TO DISCORD'S API.
 import discord
-
-# IMPORT THE OS MODULE.
 import os
+from discord.utils import find
 
-# IMPORT LOAD_DOTENV FUNCTION FROM DOTENV MODULE.
 from dotenv import load_dotenv
 
-# LOADS THE .ENV FILE THAT RESIDES ON THE SAME LEVEL AS THE SCRIPT.
 load_dotenv()
 
-# GRAB THE API TOKEN FROM THE .ENV FILE.
+client = discord.Client()
+
 DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
 
-# GETS THE CLIENT OBJECT FROM DISCORD.PY. CLIENT IS SYNONYMOUS WITH BOT.
-bot = discord.Client()
-
-# EVENT LISTENER FOR WHEN THE BOT HAS SWITCHED FROM OFFLINE TO ONLINE.
-@bot.event
+@client.event
 async def on_ready():
-	# CREATES A COUNTER TO KEEP TRACK OF HOW MANY GUILDS / SERVERS THE BOT IS CONNECTED TO.
-	guild_count = 0
+    print('We have logged in as {0.user}'.format(client))
+    
+@client.event
+async def on_guild_join(guild):
+    general = find(lambda x: x.name == 'general',  guild.text_channels)
+    if general and general.permissions_for(guild.me).send_messages:
+        await general.send('Hey\nType **help** to know the bot')
 
-	# LOOPS THROUGH ALL THE GUILD / SERVERS THAT THE BOT IS ASSOCIATED WITH.
-	for guild in bot.guilds:
-		# PRINT THE SERVER'S ID AND NAME.
-		print(f"- {guild.id} (name: {guild.name})")
-
-		# INCREMENTS THE GUILD COUNTER.
-		guild_count = guild_count + 1
-
-	# PRINTS HOW MANY GUILDS / SERVERS THE BOT IS IN.
-	print("CowinBot is in " + str(guild_count) + " guilds.")
-
-# EVENT LISTENER FOR WHEN A NEW MESSAGE IS SENT TO A CHANNEL.
-@bot.event
+@client.event
 async def on_message(message):
-	# CHECKS IF THE MESSAGE THAT WAS SENT IS EQUAL TO "HELLO".
-	if message.content == "hello":
-		# SENDS BACK A MESSAGE TO THE CHANNEL.
-		await message.channel.send("hey dirtbag")
+    if message.author == client.user:
+        return
 
-# EXECUTES THE BOT WITH THE SPECIFIED TOKEN. TOKEN HAS BEEN REMOVED AND USED JUST AS AN EXAMPLE.
-bot.run(DISCORD_TOKEN)
+    if message.content.startswith('$hello'):
+        await message.channel.send('Hello!')
+        
+    if message.content.startswith('!help'):
+        embedVar = discord.Embed(title="Type the following to perform the steps", description="Thanks For Choosing ME", color=0xFFFFFF,
+                                 url='https://firebasestorage.googleapis.com/v0/b/bot-discord-f0d02.appspot.com/o/bot.png?alt=media&token=edbbf198-5a38-4434-a0c0-c12a885de0ae',
+                                 )
+        embedVar.add_field(name="!myInfo", value="To know your registration details", inline=False)
+        embedVar.add_field(name="!vaccine", value="To know available centers", inline=True)
+        embedVar.add_field(name="!register", value="For registration", inline=True)
+        embedVar.add_field(name="!notify", value="To get notification of the slots", inline=True)
+        embedVar.add_field(name="!delete_myInfo", value="To delete your info", inline=True)
+        embedVar.add_field(name="!stop_notify", value="To stop the notification", inline=True)
+        embedVar.set_author(name='Cowin Bot', icon_url='https://images.vexels.com/media/users/3/140503/isolated/lists/24882e71e8111a13f3f1055c1ad53cf3-hand-with-injection.png', url='https://discordpy.readthedocs.io/en/stable/index.html')
+        embedVar.set_thumbnail(url='https://firebasestorage.googleapis.com/v0/b/bot-discord-f0d02.appspot.com/o/bot.png?alt=media&token=edbbf198-5a38-4434-a0c0-c12a885de0ae')
+        embedVar.set_image(url='https://firebasestorage.googleapis.com/v0/b/bot-discord-f0d02.appspot.com/o/photo6147825254626602018.jpg?alt=media&token=38ca1f38-ad75-4ad0-b0fe-5ac4fce18d56')
+        embedVar.set_footer(text='Get Vaccinated', icon_url='https://firebasestorage.googleapis.com/v0/b/bot-discord-f0d02.appspot.com/o/bot.png?alt=media&token=edbbf198-5a38-4434-a0c0-c12a885de0ae')
+        await message.channel.send(embed=embedVar)
+
+client.run(DISCORD_TOKEN)
