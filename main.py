@@ -1,7 +1,9 @@
+from logging import exception
 import discord
 import os
 from discord.utils import find
 import requests
+import asyncio
 
 from dotenv import load_dotenv
 
@@ -29,7 +31,7 @@ async def on_message(message):
     if message.content.startswith('$hello'):
         await message.channel.send('Hello!')
         
-    if message.content.startswith('!help'):
+    if message.content.startswith('help'):
         embedVar = discord.Embed(title="Type the following to perform the steps", description="Thanks For Choosing ME", color=0xFFFFFF,
                                  url='https://firebasestorage.googleapis.com/v0/b/bot-discord-f0d02.appspot.com/o/bot.png?alt=media&token=edbbf198-5a38-4434-a0c0-c12a885de0ae',
                                  )
@@ -46,7 +48,7 @@ async def on_message(message):
         await message.channel.send(embed=embedVar)
 
     if message.content.startswith('vaccine'):
-        # message.reply('Hi Choose You State')
+        await message.channel.send('Hi Choose You State')
         try:
             print("jcvhb")
             url = 'https://cdn-api.co-vin.in/api/v2/admin/location/states'
@@ -78,7 +80,6 @@ async def on_message(message):
             return print(e)
         
     if message.content.startswith('!'):
-        # message.reply('Hi Choose You State')
         if message.content == '!':
             await message.reply('Please enter valid commands')
         else:
@@ -89,6 +90,7 @@ async def on_message(message):
                 res = requests.get(url,headers=headers)
                 print(res)
                 if res.status_code == 200:
+                    await message.channel.send('Hi Choose You District')
                     data = res.json()
                     
                     district = data.get('districts')
@@ -111,6 +113,73 @@ async def on_message(message):
         
             except requests.ConnectionError as e:
                 return print(e)
+            
+    if message.content.startswith('#'):
+        if message.content == '#':
+            await message.reply('Please enter valid commands')
+        else:
+
+
+            user_input = message.content.split('#')[1]
+            
+            await message.channel.send("\n" + "Please Enter Your Preferred Date in this format ** 01-05-2021 **")
+            
+            print("dcbv")
+            
+            def check(m):
+                return m.author == message.author
+            try:
+                date = await client.wait_for('message', check=check, timeout=60000)
+                print(date.content)
+            except asyncio.TimeoutError:
+                return await message.channel.send(f'Sorry, you took too long.')
+                
+            url = "https://cdn-api.co-vin.in/api/v2/appointment/sessions/public/findByDistrict?district_id=" + user_input + "&date=" + date.content
+            headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36'}
+            try:
+                res = requests.get(url,headers=headers)
+                print(res)
+                if res.status_code == 200:
+                    data = res.json()
+                    
+                    session = data.get('sessions')
+
+                    s_len = len(session)
+
+                    s_str = ''
+                    
+                    abc = []
+                    
+                    
+                    if s_len < 1:
+                        await message.reply("Sorry, there is no Centers Avaliable on " + date.content +"\n"+ "Please enter district id and try again! ")
+                    
+                    for i in range(0,s_len):
+                        session_data = str(session[i].get('center_id')) + " (" + str(data.get('sessions')[i].get('name')) + ")" + " (" + str(data.get('sessions')[i].get('block_name')) + ")" + " (" + str(data.get('sessions')[i].get('pincode')) + ")" + " (" + str(data.get('sessions')[i].get('from')) + ")" + " (" + str(data.get('sessions')[i].get('to')) + ")" + " (" + str(data.get('sessions')[i].get('lat')) + ")" + " (" + str(data.get('sessions')[i].get('long')) + ")" + " (" + str(data.get('sessions')[i].get('slots')) + ")"
+                        
+                        s_str = ":hospital:" + "\n" + "**Center Id: ** " + str(data.get('sessions')[i].get('center_id')) + "\n" + "**Center Name: ** " + str(data.get('sessions')[i].get('name')) + "\n" + "**Block: **" + str(data.get('sessions')[i].get('block_name')) + "\n" +"**PIN: **" + str(data.get('sessions')[i].get('pincode')) + "\n" +"**Fees: **" + str(data.get('sessions')[i].get('fee_type')) + "\n" + "**Slot Avaliable For Dose 1: **" + str(data.get('sessions')[i].get('available_capacity_dose1')) + "\n" + "**Slot Avaliable For Dose 2: **" + str(data.get('sessions')[i].get('available_capacity_dose2')) + "\n" + "**Slot Avaliable- **" + str(data.get('sessions')[i].get('available_capacity')) + "\n" + "**Age: **" + str(data.get('sessions')[i].get('min_age_limit')) + "+" + "\n" + ":syringe:**Vaccine: **" + str(data.get('sessions')[i].get('vaccine')) + "\n" +":stopwatch:**Session Timings**:stopwatch:" + "\n" + str(data.get('sessions')[i].get('slots')) + "\n" + "\n"
+                    
+                        abc.append(s_str)
+                        
+                    # def fun(x):
+                    #     embedVar = discord.Embed(title="Session Details", description=x, color=3447003)
+                    #     embedVar.set_footer(text=f"Total Parts {len(abc)}",icon_url='https://firebasestorage.googleapis.com/v0/b/bot-discord-f0d02.appspot.com/o/bot.png?alt=media&token=edbbf198-5a38-4434-a0c0-c12a885de0ae')
+                    #     message.channel.send(embed=embedVar)
+                        
+                    # await asyncio.wait(map(fun, abc))
+                    
+                    for i in abc:
+                        embedVar = discord.Embed(title="Session Details", description=i, color=3447003)
+                        embedVar.set_footer(text=f"Total Parts {len(abc)}",icon_url='https://firebasestorage.googleapis.com/v0/b/bot-discord-f0d02.appspot.com/o/bot.png?alt=media&token=edbbf198-5a38-4434-a0c0-c12a885de0ae')
+                        await message.channel.send(embed=embedVar)
+                        
+                else:
+                    await message.channel.send("Sorry, There is no available slots on ")
+        
+            except requests.ConnectionError as e:
+                return print(e)
+                
+
     
                 
 
