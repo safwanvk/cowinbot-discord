@@ -1,6 +1,7 @@
 import discord
 import os
 from discord.utils import find
+import requests
 
 from dotenv import load_dotenv
 
@@ -43,5 +44,40 @@ async def on_message(message):
         embedVar.set_image(url='https://firebasestorage.googleapis.com/v0/b/bot-discord-f0d02.appspot.com/o/photo6147825254626602018.jpg?alt=media&token=38ca1f38-ad75-4ad0-b0fe-5ac4fce18d56')
         embedVar.set_footer(text='Get Vaccinated', icon_url='https://firebasestorage.googleapis.com/v0/b/bot-discord-f0d02.appspot.com/o/bot.png?alt=media&token=edbbf198-5a38-4434-a0c0-c12a885de0ae')
         await message.channel.send(embed=embedVar)
+
+    if message.content.startswith('!vaccine'):
+        # await message.reply('Hi Choose You State')
+        try:
+            print("jcvhb")
+            url = 'https://cdn-api.co-vin.in/api/v2/admin/location/states'
+            headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36'}
+            res = requests.get(url,headers=headers)
+            print(res)
+            if res.status_code == 200:
+                data = res.json()
+                print(data)
+                
+                state = data.get('states')
+
+                arr_len = len(state)
+
+                num_str = ''
+                
+                for i in range(0,arr_len):
+                    state_data = str(state[i].get('state_name')) + " (" + " Id: " + str(data.get('states')[i].get('state_id')) + ")"
+                    
+                    num_str += str(state[i].get('state_name')) + " 🆔 == " + "**!" + str(data.get('states')[i].get('state_id')) + "**"
+                    
+                    if i < (arr_len - 1):
+                        num_str += '\n'
+                        
+                embedVar = discord.Embed(title="State List", description=num_str, color=15462131)
+                embedVar.set_footer(text="Get Vaccinated",icon_url='https://firebasestorage.googleapis.com/v0/b/bot-discord-f0d02.appspot.com/o/bot.png?alt=media&token=edbbf198-5a38-4434-a0c0-c12a885de0ae')
+                await message.channel.send(embed=embedVar)
+                
+        except requests.ConnectionError as e:
+            return print(e)
+                
+
 
 client.run(DISCORD_TOKEN)
