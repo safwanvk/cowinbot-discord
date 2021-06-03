@@ -1,9 +1,10 @@
 from logging import exception
 import discord
 import os
+from discord.message import Message
 from discord.utils import find
-import requests
 import asyncio
+import hashlib, http.client, json, os, sys
 
 from dotenv import load_dotenv
 
@@ -12,6 +13,7 @@ load_dotenv()
 client = discord.Client()
 
 DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
+
 
 @client.event
 async def on_ready():
@@ -48,71 +50,73 @@ async def on_message(message):
         await message.channel.send(embed=embedVar)
 
     if message.content.startswith('vaccine'):
-        await message.channel.send('Hi Choose You State')
-        try:
-            print("jcvhb")
-            url = 'https://cdn-api.co-vin.in/api/v2/admin/location/states'
-            headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36'}
-            res = requests.get(url,headers=headers)
-            print(res)
-            if res.status_code == 200:
-                data = res.json()
-                
-                state = data.get('states')
+        print("jcvhb")
+        conn = http.client.HTTPSConnection("cdn-api.co-vin.in")
+        url = 'https://cdn-api.co-vin.in/api/v2/admin/location/states'
 
-                arr_len = len(state)
+        conn = http.client.HTTPSConnection("cdn-api.co-vin.in")
+        conn.request("GET",url)
+        res = conn.getresponse()
+        print(res)
+        if res.status == 200:
+            await message.channel.send('Hi Choose You State')
+            d = res.read()
+            data = json.loads(d)
+            
+            state = data.get('states')
 
-                num_str = ''
+            arr_len = len(state)
+
+            num_str = ''
+            
+            for i in range(0,arr_len):
+                state_data = str(state[i].get('state_name')) + " (" + " Id: " + str(data.get('states')[i].get('state_id')) + ")"
                 
-                for i in range(0,arr_len):
-                    state_data = str(state[i].get('state_name')) + " (" + " Id: " + str(data.get('states')[i].get('state_id')) + ")"
+                num_str += str(state[i].get('state_name')) + " 🆔 == " + "**!" + str(data.get('states')[i].get('state_id')) + "**"
+                
+                if i < (arr_len - 1):
+                    num_str += '\n'
                     
-                    num_str += str(state[i].get('state_name')) + " 🆔 == " + "**!" + str(data.get('states')[i].get('state_id')) + "**"
-                    
-                    if i < (arr_len - 1):
-                        num_str += '\n'
-                        
-                embedVar = discord.Embed(title="Choose Your State", description=num_str, color=15462131)
-                embedVar.set_footer(text="Get Vaccinated",icon_url='https://firebasestorage.googleapis.com/v0/b/bot-discord-f0d02.appspot.com/o/bot.png?alt=media&token=edbbf198-5a38-4434-a0c0-c12a885de0ae')
-                await message.channel.send(embed=embedVar)
+            embedVar = discord.Embed(title="Choose Your State", description=num_str, color=15462131)
+            embedVar.set_footer(text="Get Vaccinated",icon_url='https://firebasestorage.googleapis.com/v0/b/bot-discord-f0d02.appspot.com/o/bot.png?alt=media&token=edbbf198-5a38-4434-a0c0-c12a885de0ae')
+            await message.channel.send(embed=embedVar)
     
-        except requests.ConnectionError as e:
-            return print(e)
         
     if message.content.startswith('!'):
         if message.content == '!':
             await message.reply('Please enter valid commands')
         else:
-            try:
-                user_input = message.content.split('!')[1]
-                url = 'https://cdn-api.co-vin.in/api/v2/admin/location/districts/' + user_input
-                headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36'}
-                res = requests.get(url,headers=headers)
-                print(res)
-                if res.status_code == 200:
-                    await message.channel.send('Hi Choose You District')
-                    data = res.json()
-                    
-                    district = data.get('districts')
+            user_input = message.content.split('!')[1]
+            url = "https://cdn-api.co-vin.in/api/v2/admin/location/districts/" + user_input
 
-                    dis_length = len(district)
+            conn = http.client.HTTPSConnection("cdn-api.co-vin.in")
+            conn.request("GET",url)
+            res = conn.getresponse()
+            print(res)
+            if res.status == 200:
+                await message.channel.send('Hi Choose You District')
+                d = res.read()
+                data = json.loads(d)
+                
+                district = data.get('districts')
 
-                    dist_string = ''
+                dis_length = len(district)
+
+                dist_string = ''
+                
+                for i in range(0,dis_length):
+                    dist_data = str(district[i].get('district_name')) + " (" + " Id: " + str(data.get('districts')[i].get('district_id')) + ")"
                     
-                    for i in range(0,dis_length):
-                        dist_data = str(district[i].get('district_name')) + " (" + " Id: " + str(data.get('districts')[i].get('district_id')) + ")"
+                    dist_string += str(district[i].get('district_name')) + " 🆔 == " + "#" + str(data.get('districts')[i].get('district_id'))
+                    
+                    if i < (dis_length - 1):
+                        dist_string += '\n'
                         
-                        dist_string += str(district[i].get('district_name')) + " 🆔 == " + "#" + str(data.get('districts')[i].get('district_id'))
-                        
-                        if i < (dis_length - 1):
-                            dist_string += '\n'
-                            
-                    embedVar = discord.Embed(title="Choose Your District", description=dist_string, color=15462131)
-                    embedVar.set_footer(text="Get Vaccinated",icon_url='https://firebasestorage.googleapis.com/v0/b/bot-discord-f0d02.appspot.com/o/bot.png?alt=media&token=edbbf198-5a38-4434-a0c0-c12a885de0ae')
-                    await message.channel.send(embed=embedVar)
+                embedVar = discord.Embed(title="Choose Your District", description=dist_string, color=15462131)
+                embedVar.set_footer(text="Get Vaccinated",icon_url='https://firebasestorage.googleapis.com/v0/b/bot-discord-f0d02.appspot.com/o/bot.png?alt=media&token=edbbf198-5a38-4434-a0c0-c12a885de0ae')
+                await message.channel.send(embed=embedVar)
         
-            except requests.ConnectionError as e:
-                return print(e)
+
             
     if message.content.startswith('#'):
         if message.content == '#':
@@ -134,51 +138,98 @@ async def on_message(message):
             except asyncio.TimeoutError:
                 return await message.channel.send(f'Sorry, you took too long.')
                 
-            url = "https://cdn-api.co-vin.in/api/v2/appointment/sessions/public/findByDistrict?district_id=" + user_input + "&date=" + date.content
-            headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36'}
-            try:
-                res = requests.get(url,headers=headers)
-                print(res)
-                if res.status_code == 200:
-                    data = res.json()
-                    
-                    session = data.get('sessions')
-
-                    s_len = len(session)
-
-                    s_str = ''
-                    
-                    abc = []
-                    
-                    
-                    if s_len < 1:
-                        await message.reply("Sorry, there is no Centers Avaliable on " + date.content +"\n"+ "Please enter district id and try again! ")
-                    
-                    for i in range(0,s_len):
-                        session_data = str(session[i].get('center_id')) + " (" + str(data.get('sessions')[i].get('name')) + ")" + " (" + str(data.get('sessions')[i].get('block_name')) + ")" + " (" + str(data.get('sessions')[i].get('pincode')) + ")" + " (" + str(data.get('sessions')[i].get('from')) + ")" + " (" + str(data.get('sessions')[i].get('to')) + ")" + " (" + str(data.get('sessions')[i].get('lat')) + ")" + " (" + str(data.get('sessions')[i].get('long')) + ")" + " (" + str(data.get('sessions')[i].get('slots')) + ")"
-                        
-                        s_str = ":hospital:" + "\n" + "**Center Id: ** " + str(data.get('sessions')[i].get('center_id')) + "\n" + "**Center Name: ** " + str(data.get('sessions')[i].get('name')) + "\n" + "**Block: **" + str(data.get('sessions')[i].get('block_name')) + "\n" +"**PIN: **" + str(data.get('sessions')[i].get('pincode')) + "\n" +"**Fees: **" + str(data.get('sessions')[i].get('fee_type')) + "\n" + "**Slot Avaliable For Dose 1: **" + str(data.get('sessions')[i].get('available_capacity_dose1')) + "\n" + "**Slot Avaliable For Dose 2: **" + str(data.get('sessions')[i].get('available_capacity_dose2')) + "\n" + "**Slot Avaliable- **" + str(data.get('sessions')[i].get('available_capacity')) + "\n" + "**Age: **" + str(data.get('sessions')[i].get('min_age_limit')) + "+" + "\n" + ":syringe:**Vaccine: **" + str(data.get('sessions')[i].get('vaccine')) + "\n" +":stopwatch:**Session Timings**:stopwatch:" + "\n" + str(data.get('sessions')[i].get('slots')) + "\n" + "\n"
-                    
-                        abc.append(s_str)
-                        
-                    # def fun(x):
-                    #     embedVar = discord.Embed(title="Session Details", description=x, color=3447003)
-                    #     embedVar.set_footer(text=f"Total Parts {len(abc)}",icon_url='https://firebasestorage.googleapis.com/v0/b/bot-discord-f0d02.appspot.com/o/bot.png?alt=media&token=edbbf198-5a38-4434-a0c0-c12a885de0ae')
-                    #     message.channel.send(embed=embedVar)
-                        
-                    # await asyncio.wait(map(fun, abc))
-                    
-                    for i in abc:
-                        embedVar = discord.Embed(title="Session Details", description=i, color=3447003)
-                        embedVar.set_footer(text=f"Total Parts {len(abc)}",icon_url='https://firebasestorage.googleapis.com/v0/b/bot-discord-f0d02.appspot.com/o/bot.png?alt=media&token=edbbf198-5a38-4434-a0c0-c12a885de0ae')
-                        await message.channel.send(embed=embedVar)
-                        
-                else:
-                    await message.channel.send("Sorry, There is no available slots on ")
         
-            except requests.ConnectionError as e:
-                return print(e)
+            conn = http.client.HTTPSConnection("cdn-api.co-vin.in")
+            url = "https://cdn-api.co-vin.in/api/v2/appointment/sessions/public/findByDistrict?district_id=" + user_input + "&date=" + date.content
+            conn.request("GET",url)
+            res = conn.getresponse()
+            print(res.status)
+            if res.status == 200:
+                d = res.read()
+                data = json.loads(d)
                 
+                session = data.get('sessions')
+
+                s_len = len(session)
+
+                s_str = ''
+                
+                abc = []
+                
+                
+                if s_len < 1:
+                    await message.reply("Sorry, there is no Centers Avaliable on " + date.content +"\n"+ "Please enter district id and try again! ")
+                
+                for i in range(0,s_len):
+                    session_data = str(session[i].get('center_id')) + " (" + str(data.get('sessions')[i].get('name')) + ")" + " (" + str(data.get('sessions')[i].get('block_name')) + ")" + " (" + str(data.get('sessions')[i].get('pincode')) + ")" + " (" + str(data.get('sessions')[i].get('from')) + ")" + " (" + str(data.get('sessions')[i].get('to')) + ")" + " (" + str(data.get('sessions')[i].get('lat')) + ")" + " (" + str(data.get('sessions')[i].get('long')) + ")" + " (" + str(data.get('sessions')[i].get('slots')) + ")"
+                    
+                    s_str = ":hospital:" + "\n" + "**Center Id: ** " + str(data.get('sessions')[i].get('center_id')) + "\n" + "**Center Name: ** " + str(data.get('sessions')[i].get('name')) + "\n" + "**Block: **" + str(data.get('sessions')[i].get('block_name')) + "\n" +"**PIN: **" + str(data.get('sessions')[i].get('pincode')) + "\n" +"**Fees: **" + str(data.get('sessions')[i].get('fee_type')) + "\n" + "**Slot Avaliable For Dose 1: **" + str(data.get('sessions')[i].get('available_capacity_dose1')) + "\n" + "**Slot Avaliable For Dose 2: **" + str(data.get('sessions')[i].get('available_capacity_dose2')) + "\n" + "**Slot Avaliable- **" + str(data.get('sessions')[i].get('available_capacity')) + "\n" + "**Age: **" + str(data.get('sessions')[i].get('min_age_limit')) + "+" + "\n" + ":syringe:**Vaccine: **" + str(data.get('sessions')[i].get('vaccine')) + "\n" +":stopwatch:**Session Timings**:stopwatch:" + "\n" + str(data.get('sessions')[i].get('slots')) + "\n" + "\n"
+                
+                    abc.append(s_str)
+                    
+                await message.channel.send("\n" + "** Center Details **")
+                    
+                # def fun(x):
+                #     embedVar = discord.Embed(title="Session Details", description=x, color=3447003)
+                #     embedVar.set_footer(text=f"Total Parts {len(abc)}",icon_url='https://firebasestorage.googleapis.com/v0/b/bot-discord-f0d02.appspot.com/o/bot.png?alt=media&token=edbbf198-5a38-4434-a0c0-c12a885de0ae')
+                #     message.channel.send(embed=embedVar)
+                    
+                # await asyncio.wait(map(fun, abc))
+                
+                for i in abc:
+                    embedVar = discord.Embed(title="Session Details", description=i, color=3447003)
+                    embedVar.set_footer(text=f"Total Parts {len(abc)}",icon_url='https://firebasestorage.googleapis.com/v0/b/bot-discord-f0d02.appspot.com/o/bot.png?alt=media&token=edbbf198-5a38-4434-a0c0-c12a885de0ae')
+                    await message.channel.send(embed=embedVar)
+                    
+            else:
+                print(res.status)
+                await message.channel.send("Sorry, There is no available slots on ")
+        
+            
+    if message.content.startswith('register'):
+        await message.channel.send("I'm Concernd About Your privacy, so I have directly send you the details 🔒")
+        await message.author.send("Enter your Phone number with your contry code (91-India) 📞")   
+        
+        
+    if message.content.startswith('91'):
+        phone = message.content.split('91')[1]
+        
+        #todo phone no update in db
+        conn = http.client.HTTPSConnection("cdn-api.co-vin.in")
+        url = "https://cdn-api.co-vin.in/api/v2/auth/generateMobileOTP"
+
+        payload = json.dumps({
+        "secret": "U2FsdGVkX18NuNa/jso3AJbIkh1Rf6DDBC58kOBELnGJA58OH/R5EKIz6hrONnCg2kTB8ktbqt0gyJ9aCKyWFw==",
+        "mobile": phone,
+        })
+
+        headers = {
+        'authority': 'cdn-api.co-vin.in',
+        'sec-ch-ua': '" Not A;Brand";v="99", "Chromium";v="90", "Google Chrome";v="90"',
+        'accept': 'application/json, text/plain, */*',
+        'sec-ch-ua-mobile': '?0',
+        'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.212 Safari/537.36',
+        'content-type': 'application/json',
+        'origin': 'https://selfregistration.cowin.gov.in',
+        'sec-fetch-site': 'cross-site',
+        'sec-fetch-mode': 'cors',
+        'sec-fetch-dest': 'empty',
+        'referer': 'https://selfregistration.cowin.gov.in/',
+        'accept-language': 'en-IN,en;q=0.9,hi-IN;q=0.8,hi;q=0.7,en-GB;q=0.6,en-US;q=0.5'
+        }
+
+        conn.request("POST", url, payload, headers)
+        res = conn.getresponse()
+        if res.status == 200:
+            d = res.read()
+            data = json.loads(d)
+            txnID = data["txnId"]
+            # todo update txnID in db
+            
+            
+            
+            
+            
 
     
                 
