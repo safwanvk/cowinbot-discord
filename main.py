@@ -4,7 +4,8 @@ import os
 from discord.message import Message
 from discord.utils import find
 import asyncio
-import hashlib, http.client, json, os, sys
+import http.client, json, os, sys
+from utils import *
 
 from dotenv import load_dotenv
 
@@ -223,13 +224,58 @@ async def on_message(message):
         if res.status == 200:
             d = res.read()
             data = json.loads(d)
-            txnID = data["txnId"]
+            
             # todo update txnID in db
             
+            #otp verification
+            await message.author.send("Enter OTP ")
+            
+            def check(m):
+                return m.author == message.author
+            try:
+                otp = await client.wait_for('message', check=check, timeout=60000)
+                print(otp.content)
+            except asyncio.TimeoutError:
+                return await message.channel.send(f'Sorry, you took too long.')
+            
+            encoded_otp = encrypt_string(otp.content)
             
             
+            payload = json.dumps({
+            "otp": encoded_otp,
+            "txnId": data["txnId"]
+            })
+
+            headers = {
+            'authority': 'cdn-api.co-vin.in',
+            'sec-ch-ua': '" Not A;Brand";v="99", "Chromium";v="90", "Google Chrome";v="90"',
+            'accept': 'application/json, text/plain, */*',
+            'sec-ch-ua-mobile': '?0',
+            'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.212 Safari/537.36',
+            'content-type': 'application/json',
+            'origin': 'https://selfregistration.cowin.gov.in',
+            'sec-fetch-site': 'cross-site',
+            'sec-fetch-mode': 'cors',
+            'sec-fetch-dest': 'empty',
+            'referer': 'https://selfregistration.cowin.gov.in/',
+            'accept-language': 'en-IN,en;q=0.9,hi-IN;q=0.8,hi;q=0.7,en-GB;q=0.6,en-US;q=0.5'
+            }
+
+            conn.request("POST", "/api/v2/auth/validateMobileOtp", payload, headers)
+            res = conn.getresponse()
             
-            
+            if res.status == 200:
+                d = res.read()
+                data = json.loads(d)
+
+                # token = data["token"]
+                #todo update token in db
+                
+                await message.author.send("OTP Verification Successfull 👍")
+                
+            else:
+                await message.author.send("Sorry, OTP is incorrect 👎")
+                # await message.author.send("You can still store your data for future use \n Enter **'store_info'**")#todo further update
 
     
                 
