@@ -208,6 +208,13 @@ async def on_message(message):
         phone = message.content.split('91')[1]
         
         #todo phone no update in db
+        
+        sql = "INSERT INTO users (id, userId, phoneNo) VALUES (default,%s, %s)"
+        val = (message.author.id,phone)
+        cursor.execute(sql, val)
+
+        db.commit()
+        
         conn = http.client.HTTPSConnection("cdn-api.co-vin.in")
         url = "https://cdn-api.co-vin.in/api/v2/auth/generateMobileOTP"
 
