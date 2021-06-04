@@ -207,13 +207,19 @@ async def on_message(message):
     if message.content.startswith('91'):
         phone = message.content.split('91')[1]
         
-        #todo phone no update in db
-        
-        sql = "INSERT INTO users (id, userId, phoneNo) VALUES (default,%s, %s)"
-        val = (message.author.id,phone)
+        sql = ("SELECT id FROM users where userId = %s")
+        val = (message.author.id,)
         cursor.execute(sql, val)
+        res = cursor.fetchone()
+        
+        if res:
+            pass
+        else:
+            sql = "INSERT INTO users (id, userId, phoneNo) VALUES (default,%s, %s)"
+            val = (message.author.id,phone)
+            cursor.execute(sql, val)
 
-        db.commit()
+            db.commit()
         
         conn = http.client.HTTPSConnection("cdn-api.co-vin.in")
         url = "https://cdn-api.co-vin.in/api/v2/auth/generateMobileOTP"
@@ -243,8 +249,13 @@ async def on_message(message):
         if res.status == 200:
             d = res.read()
             data = json.loads(d)
+
             
-            # todo update txnID in db
+            sql = "UPDATE users SET txnId = %s WHERE userId = %s"
+            val = (data['txnId'],message.author.id)
+            cursor.execute(sql, val)
+
+            db.commit()
             
             #otp verification
             await message.author.send("Enter OTP ")
@@ -286,7 +297,13 @@ async def on_message(message):
                 data = json.loads(d)
 
                 # token = data["token"]
-                #todo update token in db
+
+                
+                sql = "UPDATE users SET token = %s WHERE userId = %s"
+                val = (data["token"],message.author.id)
+                cursor.execute(sql, val)
+
+                db.commit()
                 
                 await message.author.send("OTP Verification Successfull 👍")
                 
@@ -295,7 +312,12 @@ async def on_message(message):
         
                 try:
                     name = await client.wait_for('message', check=check, timeout=60000)
-                    #todo name is stored in db
+
+                    sql = "UPDATE users SET name = %s WHERE userId = %s"
+                    val = (name.content,message.author.id)
+                    cursor.execute(sql, val)
+
+                    db.commit()
                 except asyncio.TimeoutError:
                     return await message.channel.send(f'Sorry, you took too long.')
                 
@@ -303,7 +325,12 @@ async def on_message(message):
                 
                 try:
                     district = await client.wait_for('message', check=check, timeout=60000)
-                    #todo district is stored in db
+
+                    sql = "UPDATE users SET district = %s WHERE userId = %s"
+                    val = (district.content,message.author.id)
+                    cursor.execute(sql, val)
+
+                    db.commit()
                 except asyncio.TimeoutError:
                     return await message.channel.send(f'Sorry, you took too long.')
                 
@@ -311,7 +338,12 @@ async def on_message(message):
                 
                 try:
                     address = await client.wait_for('message', check=check, timeout=60000)
-                    #todo address is stored in db
+
+                    sql = "UPDATE users SET address = %s WHERE userId = %s"
+                    val = (address.content,message.author.id)
+                    cursor.execute(sql, val)
+
+                    db.commit()
                 except asyncio.TimeoutError:
                     return await message.channel.send(f'Sorry, you took too long.')
                 
@@ -319,7 +351,12 @@ async def on_message(message):
                 
                 try:
                     age = await client.wait_for('message', check=check, timeout=60000)
-                    #todo age is stored in db
+
+                    sql = "UPDATE users SET age = %s WHERE userId = %s"
+                    val = (age.content,message.author.id)
+                    cursor.execute(sql, val)
+
+                    db.commit()
                 except asyncio.TimeoutError:
                     return await message.channel.send(f'Sorry, you took too long.')
                 
@@ -327,7 +364,12 @@ async def on_message(message):
                 
                 try:
                     idType = await client.wait_for('message', check=check, timeout=60000)
-                    #todo idType is stored in db
+
+                    sql = "UPDATE users SET idType = %s WHERE userId = %s"
+                    val = (idType.content,message.author.id)
+                    cursor.execute(sql, val)
+
+                    db.commit()
                 except asyncio.TimeoutError:
                     return await message.channel.send(f'Sorry, you took too long.')
                 
@@ -335,13 +377,19 @@ async def on_message(message):
                 
                 try:
                     idNo = await client.wait_for('message', check=check, timeout=60000)
-                    #todo idNo is stored in db
+
+                    sql = "UPDATE users SET idNo = %s WHERE userId = %s"
+                    val = (idNo.content,message.author.id)
+                    cursor.execute(sql, val)
+
+                    db.commit()
+                    await message.author.send("✅ Done!!" + "\n" + "Enter 'myInfo' to know your details.");
                 except asyncio.TimeoutError:
                     return await message.channel.send(f'Sorry, you took too long.')
                 
             else:
                 await message.author.send("Sorry, OTP is incorrect 👎")
-                # await message.author.send("You can still store your data for future use \n Enter **'store_info'**")#todo further update
+                await message.author.send("You can still store your data for future use \n Enter **'store_info'**")
 
                 
 
