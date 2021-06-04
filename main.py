@@ -389,9 +389,24 @@ async def on_message(message):
                 
             else:
                 await message.author.send("Sorry, OTP is incorrect 👎")
-                await message.author.send("You can still store your data for future use \n Enter **'store_info'**")
+                await message.author.send("You can still store your data for future use \n Enter **'storeInfo'**")
 
-                
+    if message.content.startswith('myInfo'):
+        await message.channel.send("Checking....⌛")
+        
+        sql = ("SELECT name,district,address,age,idType,idNo,phoneNo FROM users where userId = %s")
+        val = (message.author.id,)
+        cursor.execute(sql, val)
+        res = cursor.fetchone()
+        
+        if res:
+            await  message.channel.send("I'm Concernd About Your privacy so I'm sending it directly to you 🔒")
+            embedVar = discord.Embed(title=res[0], description="**District: **" + res[1] + "\n" + "**Address: **" + res[2] + "\n" + "**Age: **" + str(res[3]) + "\n" + "**Personal ID: **" + res[4] + "\n" + "**ID Card no.: **" + str(res[5]) + "\n" + "**Phone no.: **" + str(res[6]) + "\n" + "\n"
+                  + "Go to the server to use me Again ", color=3447003)
+            embedVar.set_footer(text=f"Get Vaccinated",icon_url='https://firebasestorage.googleapis.com/v0/b/bot-discord-f0d02.appspot.com/o/bot.png?alt=media&token=edbbf198-5a38-4434-a0c0-c12a885de0ae')
+            await message.author.send(embed=embedVar)
+        else:
+            await message.channel.send("Sorry You Are Not Registered 😞" + "\n" + "Enter 'register' for registration")
 
 
 client.run(DISCORD_TOKEN)
