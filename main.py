@@ -4,8 +4,9 @@ import os
 from discord.message import Message
 from discord.utils import find
 import asyncio
-import http.client, json, os, sys
+import http.client, json, sys
 from utils import *
+import mysql.connector
 
 from dotenv import load_dotenv
 
@@ -14,6 +15,16 @@ load_dotenv()
 client = discord.Client()
 
 DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
+PASSWORD = os.getenv("PASSWORD")
+
+db = mysql.connector.connect(
+  host="localhost",
+  user="root",
+  password= PASSWORD,
+  database="CowinBot"
+)
+
+cursor = db.cursor()
 
 
 @client.event
