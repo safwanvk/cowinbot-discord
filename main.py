@@ -34,6 +34,9 @@ async def on_message(message):
     if message.content.startswith('$hello'):
         await message.channel.send('Hello!')
         
+    def check(m):
+        return m.author == message.author
+        
     if message.content.startswith('help'):
         embedVar = discord.Embed(title="Type the following to perform the steps", description="Thanks For Choosing ME", color=0xFFFFFF,
                                  url='https://firebasestorage.googleapis.com/v0/b/bot-discord-f0d02.appspot.com/o/bot.png?alt=media&token=edbbf198-5a38-4434-a0c0-c12a885de0ae',
@@ -131,8 +134,6 @@ async def on_message(message):
             
             print("dcbv")
             
-            def check(m):
-                return m.author == message.author
             try:
                 date = await client.wait_for('message', check=check, timeout=60000)
                 print(date.content)
@@ -230,8 +231,6 @@ async def on_message(message):
             #otp verification
             await message.author.send("Enter OTP ")
             
-            def check(m):
-                return m.author == message.author
             try:
                 otp = await client.wait_for('message', check=check, timeout=60000)
                 print(otp.content)
@@ -273,11 +272,59 @@ async def on_message(message):
                 
                 await message.author.send("OTP Verification Successfull 👍")
                 
+                ## Taking user details
+                await message.author.send("Enter your Full Name")
+        
+                try:
+                    name = await client.wait_for('message', check=check, timeout=60000)
+                    #todo name is stored in db
+                except asyncio.TimeoutError:
+                    return await message.channel.send(f'Sorry, you took too long.')
+                
+                await message.author.send("Enter your District")
+                
+                try:
+                    district = await client.wait_for('message', check=check, timeout=60000)
+                    #todo district is stored in db
+                except asyncio.TimeoutError:
+                    return await message.channel.send(f'Sorry, you took too long.')
+                
+                await message.author.send("Enter your Address")
+                
+                try:
+                    address = await client.wait_for('message', check=check, timeout=60000)
+                    #todo address is stored in db
+                except asyncio.TimeoutError:
+                    return await message.channel.send(f'Sorry, you took too long.')
+                
+                await message.author.send("Enter your age")
+                
+                try:
+                    age = await client.wait_for('message', check=check, timeout=60000)
+                    #todo age is stored in db
+                except asyncio.TimeoutError:
+                    return await message.channel.send(f'Sorry, you took too long.')
+                
+                await message.author.send("Enter your ID Type (adhaar, election id, pan card...)")
+                
+                try:
+                    idType = await client.wait_for('message', check=check, timeout=60000)
+                    #todo idType is stored in db
+                except asyncio.TimeoutError:
+                    return await message.channel.send(f'Sorry, you took too long.')
+                
+                await message.author.send("Enter your ID Number")
+                
+                try:
+                    idNo = await client.wait_for('message', check=check, timeout=60000)
+                    #todo idNo is stored in db
+                except asyncio.TimeoutError:
+                    return await message.channel.send(f'Sorry, you took too long.')
+                
             else:
                 await message.author.send("Sorry, OTP is incorrect 👎")
                 # await message.author.send("You can still store your data for future use \n Enter **'store_info'**")#todo further update
 
-    
                 
 
 
