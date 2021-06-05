@@ -596,4 +596,85 @@ async def on_message(message):
         db.commit()
         await message.channel.send("❌ You have successfully deleted your information")
         
+    if message.content.startswith('storeInfo'):
+        ## Taking user details
+        await message.author.send("Enter your Full Name")
+
+        try:
+            name = await client.wait_for('message', check=check, timeout=60000)
+
+            sql = "UPDATE users SET name = %s WHERE userId = %s"
+            val = (name.content,message.author.id)
+            cursor.execute(sql, val)
+
+            db.commit()
+        except asyncio.TimeoutError:
+            return await message.channel.send(f'Sorry, you took too long.')
+        
+        await message.author.send("Enter your District")
+        
+        try:
+            district = await client.wait_for('message', check=check, timeout=60000)
+
+            sql = "UPDATE users SET district = %s WHERE userId = %s"
+            val = (district.content,message.author.id)
+            cursor.execute(sql, val)
+
+            db.commit()
+        except asyncio.TimeoutError:
+            return await message.channel.send(f'Sorry, you took too long.')
+        
+        await message.author.send("Enter your Address")
+        
+        try:
+            address = await client.wait_for('message', check=check, timeout=60000)
+
+            sql = "UPDATE users SET address = %s WHERE userId = %s"
+            val = (address.content,message.author.id)
+            cursor.execute(sql, val)
+
+            db.commit()
+        except asyncio.TimeoutError:
+            return await message.channel.send(f'Sorry, you took too long.')
+        
+        await message.author.send("Enter your age")
+        
+        try:
+            age = await client.wait_for('message', check=check, timeout=60000)
+
+            sql = "UPDATE users SET age = %s WHERE userId = %s"
+            val = (age.content,message.author.id)
+            cursor.execute(sql, val)
+
+            db.commit()
+        except asyncio.TimeoutError:
+            return await message.channel.send(f'Sorry, you took too long.')
+        
+        await message.author.send("Enter your ID Type (adhaar, election id, pan card...)")
+        
+        try:
+            idType = await client.wait_for('message', check=check, timeout=60000)
+
+            sql = "UPDATE users SET idType = %s WHERE userId = %s"
+            val = (idType.content,message.author.id)
+            cursor.execute(sql, val)
+
+            db.commit()
+        except asyncio.TimeoutError:
+            return await message.channel.send(f'Sorry, you took too long.')
+        
+        await message.author.send("Enter your ID Number")
+        
+        try:
+            idNo = await client.wait_for('message', check=check, timeout=60000)
+
+            sql = "UPDATE users SET idNo = %s WHERE userId = %s"
+            val = (idNo.content,message.author.id)
+            cursor.execute(sql, val)
+
+            db.commit()
+            await message.author.send("✅ Done!!" + "\n" + "Enter 'myInfo' to know your details.");
+        except asyncio.TimeoutError:
+            return await message.channel.send(f'Sorry, you took too long.')
+        
 client.run(DISCORD_TOKEN)
