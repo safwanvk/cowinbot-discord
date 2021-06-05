@@ -513,6 +513,20 @@ async def on_message(message):
                 await message.channel.send("**✅ Done!!** You are subscribed to get notification. You will get notification every hour when slots are available \n If you want to unsubscribe notification, then Just Enter '**stopNotify**'")
                 await message.author.send("✅ Done!! You are Subscribed To Get Notification")
 
+    if message.content.startswith('stopNotify'):
+        sql = "DELETE FROM notify WHERE userId = %s"
+        val = (message.author.id)
+        cursor.execute(sql, val)
 
-    
+        db.commit()
+        await message.channel.send("❌ You have successfully unsubscribed ")
+        
+    if message.content.startswith('deleteMyinfo'):
+        sql = "DELETE FROM users WHERE userId = %s"
+        val = (message.author.id)
+        cursor.execute(sql, val)
+
+        db.commit()
+        await message.channel.send("❌ You have successfully deleted your information")
+        
 client.run(DISCORD_TOKEN)
