@@ -7,6 +7,8 @@ import asyncio
 import http.client, json, sys
 from utils import *
 import mysql.connector
+from apscheduler.schedulers.blocking import BlockingScheduler
+import moment
 
 from dotenv import load_dotenv
 
@@ -41,13 +43,78 @@ async def on_guild_join(guild):
 async def on_message(message):
     if message.author == client.user:
         return
+    
+    async def fetch_next_7Days():
+        dates = []
+        today = moment.now()
+        for i in range(0,7):
+            date_string = today.now().format("DD-MM-YYYY")
+            dates.append(date_string)
+            today.add(1,'day')
+        return dates
+            
+    
+    async def checkAvailability(district,age,userid):
+        date_array = await fetch_next_7Days()
+        for i in date_array:
+            conn = http.client.HTTPSConnection("cdn-api.co-vin.in")
+            url = f'https://cdn-api.co-vin.in/api/v2/appointment/sessions/public/findByDistrict?district_id=" + {district} + "&date=" + {i}'
 
-    if message.content.startswith('$hello'):
+            conn = http.client.HTTPSConnection("cdn-api.co-vin.in")
+            conn.request("GET",url)
+            res = conn.getresponse()
+            print(res)
+            if res.status == 200:
+                d = res.read()
+                data = json.loads(d)
+                
+                session = data.get('sessions')
+                validate_slots = filter(lambda x: x.get('min_age_limit') <= age and x.get('available_capacity') > 0, session)
+                if len(validate_slots) > 0:
+                    data = json.dumps(validate_slots, separators=(None, '\t'))
+                    sessions = json.loads(str(data))
+                    
+                    s_str = ''
+
+                    s_len = len(sessions)
+
+                    abc = []
+                    
+                    for i in range(0,s_len):
+                        s_str = " :hospital:" + "\n" + "**Center Id: ** " + str(sessions[i].get('center_id')) + "\n" +"**Center Name: ** " + str(sessions[i].get('name')) + "\n" + "**Block: **" + str(sessions[i].get('block_name')) + " \n" +"**PIN: **" + str(sessions[i].get('pincode')) + "\n" +"**Fees: **" + str(sessions[i].get('fee_type')) + " \n" + "**Slot Avaliable For Dose 1: **" + str(sessions[i].get('available_capacity_dose1')) + " \n"+ "**Slot Avaliable For Dose 2: **" + str(sessions[i].get('available_capacity_dose2')) + " \n" + "**Slot Avaliable- **" + str(sessions[i].get('available_capacity')) + " \n"+ "**Age: **" + str(sessions[i].get('min_age_limit')) + "+" + " \n" + ":syringe:**Vaccine: **" + str(sessions[i].get('vaccine')) + " \n" +":stopwatch:**Session Timings**:stopwatch:" + "\n" + str(sessions[i].get('slots')) + "\n" + "\n"
+                        abc.push(s_str)
+                    user = await client.fetch_user(userid)
+                    embedVar = discord.Embed(title="Vaccine Avaliable Slots", description=s_str, color=15462131)
+                    embedVar.set_footer(text="Get Vaccinated",icon_url='https://firebasestorage.googleapis.com/v0/b/bot-discord-f0d02.appspot.com/o/bot.png?alt=media&token=edbbf198-5a38-4434-a0c0-c12a885de0ae')
+                    await user.send(embed=embedVar)
+                else:
+                    user = await client.fetch_user(userid)
+                    await user.send("No Vaccine Avaliable Slots")
+    
+    def job():
+        sql = ("SELECT district,age,user_id FROM notify where status = 0")
+        cursor.execute(sql)
+        res = cursor.fetchall()
+        print("cbvh")
+        for i in range(0,len(res)):
+            checkAvailability(res[i].district, res[i].age, res[i].userid)
+    def app():      
+        try:
+            scheduler = BlockingScheduler()
+            scheduler.add_job(job, 'interval', hours=1)
+            scheduler.start()
+        except Exception as e:
+            print(e)
+
+    if message.content.startswith('hello'):
         await message.channel.send('Hello!')
+        app()
         
     def check(m):
         return m.author == message.author
-        
+    
+
+
     if message.content.startswith('help'):
         embedVar = discord.Embed(title="Type the following to perform the steps", description="Thanks For Choosing ME", color=0xFFFFFF,
                                  url='https://firebasestorage.googleapis.com/v0/b/bot-discord-f0d02.appspot.com/o/bot.png?alt=media&token=edbbf198-5a38-4434-a0c0-c12a885de0ae',
@@ -521,7 +588,7 @@ async def on_message(message):
         db.commit()
         await message.channel.send("❌ You have successfully unsubscribed ")
         
-    if message.content.startswith('deleteMyinfo'):
+    if message.content.startswith('deleteMyInfo'):
         sql = "DELETE FROM users WHERE userId = %s"
         val = (message.author.id)
         cursor.execute(sql, val)
