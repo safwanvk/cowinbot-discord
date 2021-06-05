@@ -56,8 +56,8 @@ async def on_message(message):
         embedVar.add_field(name="**vaccine**", value="To know available centers", inline=True)
         embedVar.add_field(name="**register**", value="For registration", inline=True)
         embedVar.add_field(name="**notify**", value="To get notification of the slots", inline=True)
-        embedVar.add_field(name="**delete_myInfo**", value="To delete your info", inline=True)
-        embedVar.add_field(name="**stop_notify**", value="To stop the notification", inline=True)
+        embedVar.add_field(name="**deleteMyInfo**", value="To delete your info", inline=True)
+        embedVar.add_field(name="**stopNotify**", value="To stop the notification", inline=True)
         embedVar.set_author(name='Cowin Bot', icon_url='https://images.vexels.com/media/users/3/140503/isolated/lists/24882e71e8111a13f3f1055c1ad53cf3-hand-with-injection.png', url='https://discordpy.readthedocs.io/en/stable/index.html')
         embedVar.set_thumbnail(url='https://firebasestorage.googleapis.com/v0/b/bot-discord-f0d02.appspot.com/o/bot.png?alt=media&token=edbbf198-5a38-4434-a0c0-c12a885de0ae')
         embedVar.set_image(url='https://firebasestorage.googleapis.com/v0/b/bot-discord-f0d02.appspot.com/o/photo6147825254626602018.jpg?alt=media&token=38ca1f38-ad75-4ad0-b0fe-5ac4fce18d56')
@@ -207,7 +207,7 @@ async def on_message(message):
     if message.content.startswith('91'):
         phone = message.content.split('91')[1]
         
-        sql = ("SELECT id FROM users where userId = %s")
+        sql = ("SELECT id FROM users where userId = %s and status = 0")
         val = (message.author.id,)
         cursor.execute(sql, val)
         res = cursor.fetchone()
@@ -407,6 +407,112 @@ async def on_message(message):
             await message.author.send(embed=embedVar)
         else:
             await message.channel.send("Sorry You Are Not Registered 😞" + "\n" + "Enter 'register' for registration")
+    
+    if message.content.startswith('notify'):
+        
+        conn = http.client.HTTPSConnection("cdn-api.co-vin.in")
+        url = 'https://cdn-api.co-vin.in/api/v2/admin/location/states'
+
+        conn = http.client.HTTPSConnection("cdn-api.co-vin.in")
+        conn.request("GET",url)
+        res = conn.getresponse()
+        print(res)
+        if res.status == 200:
+            await message.channel.send('Hi Choose You State')
+            d = res.read()
+            data = json.loads(d)
+            
+            state = data.get('states')
+
+            arr_len = len(state)
+
+            num_str = ''
+            
+            for i in range(0,arr_len):
+                state_data = str(state[i].get('state_name')) + " (" + " Id: " + str(data.get('states')[i].get('state_id')) + ")"
+                
+                num_str += str(state[i].get('state_name')) + " 🆔 == " + "**" + str(data.get('states')[i].get('state_id')) + "**"
+                
+                if i < (arr_len - 1):
+                    num_str += '\n'
+                    
+            embedVar = discord.Embed(title="Choose Your State", description=num_str, color=15462131)
+            embedVar.set_footer(text="Get Vaccinated",icon_url='https://firebasestorage.googleapis.com/v0/b/bot-discord-f0d02.appspot.com/o/bot.png?alt=media&token=edbbf198-5a38-4434-a0c0-c12a885de0ae')
+            await message.channel.send(embed=embedVar)
+            
+            try:
+                state_id = await client.wait_for('message', check=check, timeout=60000)
+
+            except asyncio.TimeoutError:
+                return await message.channel.send(f'Sorry, you took too long.')
+            
+            url = "https://cdn-api.co-vin.in/api/v2/admin/location/districts/" + state_id.content
+
+            conn = http.client.HTTPSConnection("cdn-api.co-vin.in")
+            conn.request("GET",url)
+            res = conn.getresponse()
+            print(res)
+            if res.status == 200:
+                await message.channel.send('Hi Choose You District')
+                d = res.read()
+                data = json.loads(d)
+                
+                district = data.get('districts')
+
+                dis_length = len(district)
+
+                dist_string = ''
+                
+                for i in range(0,dis_length):
+                    dist_data = str(district[i].get('district_name')) + " (" + " Id: " + str(data.get('districts')[i].get('district_id')) + ")"
+                    
+                    dist_string += str(district[i].get('district_name')) + " 🆔 == " + "**" + str(data.get('districts')[i].get('district_id'))
+                    
+                    if i < (dis_length - 1):
+                        dist_string += '\n'
+                        
+                embedVar = discord.Embed(title="Choose Your District", description=dist_string, color=15462131)
+                embedVar.set_footer(text="Get Vaccinated",icon_url='https://firebasestorage.googleapis.com/v0/b/bot-discord-f0d02.appspot.com/o/bot.png?alt=media&token=edbbf198-5a38-4434-a0c0-c12a885de0ae')
+                await message.channel.send(embed=embedVar)
+                
+                try:
+                    district_id = await client.wait_for('message', check=check, timeout=60000)
+
+                except asyncio.TimeoutError:
+                    return await message.channel.send(f'Sorry, you took too long.')
+
+                
+                sql = ("SELECT id FROM notify where user_id = %s and status = 0")
+                val = (message.author.id,)
+                cursor.execute(sql, val)
+                res = cursor.fetchone()
+                
+                if res:
+                    pass
+                else:
+                    sql = "INSERT INTO users (id, user_id, district) VALUES (default,%s, %s)"
+                    val = (message.author.id,district_id.content)
+                    cursor.execute(sql, val)
+
+                    db.commit()
+                    
+                await message.channel.send('Enter Your Age')
+                
+                try:
+                    age = await client.wait_for('message', check=check, timeout=60000)
+                    
+                except asyncio.TimeoutError:
+                    return await message.channel.send(f'Sorry, you took too long.')
+                
+                sql = "UPDATE notify SET age = %s WHERE userId = %s"
+                val = (age.content,message.author.id)
+                cursor.execute(sql, val)
+
+                db.commit()
+                
+                await message.channel.send("**✅ Done!!** You are subscribed to get notification. You will get notification every hour when slots are available \n If you want to unsubscribe notification, then Just Enter '**stopNotify**'")
+                await message.author.send("✅ Done!! You are Subscribed To Get Notification")
 
 
+    
 client.run(DISCORD_TOKEN)
