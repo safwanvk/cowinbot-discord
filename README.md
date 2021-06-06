@@ -22,7 +22,7 @@ CowinBot is a Discord Bot to make the vaccine registration in a feasible way. Ou
 </div>
 
 
-Below are the list of comands to be used to intrect with Cowin-Bot
+Below are the list of comands to be used to intrect with CowinBot
 
 | Command | Description
 |---------|-------------|
