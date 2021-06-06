@@ -10,10 +10,10 @@
 
 CowinBot is a Discord Bot to make the vaccine registration in a feasible way. Our Bot performs fucntions like Registeration, Notification etc.
 
-## How to configure and use Cowin-Bot
+## How to configure and use CowinBot
 
 <div align="left">
-  <div>Add Cowin Bot to your server</div>
+  <div>Add CowinBot to your server</div>
   <div> 
     <a href="https://discord.com/api/oauth2/authorize?client_id=849536650664607774&permissions=66185271&scope=bot">
       <img src="https://img.shields.io/badge/Discord-7289DA?style=for-the-badge&logo=discord&logoColor=white"/>
